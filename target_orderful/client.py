@@ -34,23 +34,31 @@ class OrderfulSink(HotglueSink):
             "Content-Type": "application/json",
         }
 
+    def _error_body(self, response: requests.Response) -> str:
+        """Extract a readable message from an error response body."""
+        try:
+            body = response.json()
+            return body.get("message") or body.get("error") or str(body)
+        except Exception:
+            return response.text or response.reason
+
     def validate_response(self, response: requests.Response) -> None:
         if response.status_code == 401:
             raise InvalidCredentialsError(
-                f"Orderful authentication failed: {response.text}"
+                f"Orderful authentication failed: {self._error_body(response)}"
             )
-        if response.status_code == 400:
-            try:
-                body = response.json()
-                msg = body.get("message") or response.text
-            except Exception:
-                msg = response.text
-            raise InvalidPayloadError(f"Orderful rejected the payload: {msg}")
+        if response.status_code in (400, 422):
+            raise InvalidPayloadError(
+                f"Orderful rejected the payload ({response.status_code}): "
+                f"{self._error_body(response)}"
+            )
         if response.status_code == 429 or 500 <= response.status_code < 600:
             msg = self.response_error_message(response)
             raise RetriableAPIError(msg, response)
         if 400 <= response.status_code < 500:
-            raise FatalAPIError(self.response_error_message(response))
+            raise FatalAPIError(
+                f"{self.response_error_message(response)} — {self._error_body(response)}"
+            )
 
     def upsert_record(self, record: dict, context: dict):
         state_dict = {}

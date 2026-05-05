@@ -124,12 +124,20 @@ class PurchaseOrdersSink(OrderfulSink):
                 f"purchase_orders record '{po_number}' has no line_items"
             )
 
-        sender_isa_id = (
-            record.get("sender_isa_id") or config.get("sender_isa_id", "")
-        )
-        receiver_isa_id = (
-            record.get("receiver_isa_id") or config.get("receiver_isa_id", "")
-        )
+        sender_isa_id = record.get("sender_isa_id") or config.get("sender_isa_id") or ""
+        receiver_isa_id = record.get("receiver_isa_id") or config.get("receiver_isa_id") or ""
+
+        if not sender_isa_id:
+            raise InvalidPayloadError(
+                f"purchase_orders record '{po_number}': sender_isa_id is required "
+                "either in the record or in config"
+            )
+        if not receiver_isa_id:
+            raise InvalidPayloadError(
+                f"purchase_orders record '{po_number}': receiver_isa_id is required "
+                "either in the record or in config"
+            )
+
         stream = config.get("stream", "TEST")
         po_date = _normalize_date(record.get("purchase_order_date"))
 

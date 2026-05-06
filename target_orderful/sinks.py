@@ -59,9 +59,9 @@ class PurchaseOrdersSink(OrderfulSink):
         po1_loop = []
         for i, line in enumerate(line_items, start=1):
             line_number = str(line.get("line_number") or i)
-            qty = str(line.get("quantity") or "1")
-            price = str(line.get("unit_price") or "0")
-            sku = str(line.get("sku") or "")
+            qty = str(line["quantity"] if line.get("quantity") is not None else "1")
+            price = str(line["unit_price"] if line.get("unit_price") is not None else "0")
+            sku = str(line["sku"] if line.get("sku") is not None else "")
             uom = str(line.get("uom") or "EA").upper()
 
             po1_entry = {
@@ -137,6 +137,10 @@ class PurchaseOrdersSink(OrderfulSink):
 
         stream = config.get("stream", "TEST")
         po_date = _normalize_date(record.get("purchase_order_date"))
+        if not po_date:
+            raise InvalidPayloadError(
+                f"purchase_orders record '{po_number}': purchase_order_date is required"
+            )
 
         po1_loop = self._build_po1_loop(line_items)
         segment_count = str(self._count_segments(po1_loop))

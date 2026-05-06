@@ -48,8 +48,6 @@ Example `config.json`:
 
 The Orderful API uses a static API key passed via the `orderful-api-key` request header. Obtain it from the Orderful UI under **Settings → API Credentials**.
 
-**Note on 850 direction:** The EDI 850 flows from buyer to supplier. Orderful's v4 API enforces that the authenticated org is the sender, so this target always uses the v3 API, which allows specifying the sender ISA ID freely. Set `sender_isa_id` to whichever ISA ID represents the buying entity for each deployment.
-
 ---
 
 ## Supported Streams

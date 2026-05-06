@@ -1,14 +1,11 @@
 """Orderful target sinks."""
 
 import re
-import singer
 from typing import Optional
 
 from hotglue_etl_exceptions import InvalidPayloadError
 
 from target_orderful.client import OrderfulSink
-
-LOGGER = singer.get_logger()
 
 
 def _normalize_date(date_val: Optional[str]) -> Optional[str]:
@@ -62,9 +59,9 @@ class PurchaseOrdersSink(OrderfulSink):
         po1_loop = []
         for i, line in enumerate(line_items, start=1):
             line_number = str(line.get("line_number") or i)
-            qty = str(line.get("quantity", "1"))
-            price = str(line.get("unit_price", "0"))
-            sku = str(line.get("sku", ""))
+            qty = str(line.get("quantity") or "1")
+            price = str(line.get("unit_price") or "0")
+            sku = str(line.get("sku") or "")
             uom = str(line.get("uom") or "EA").upper()
 
             po1_entry = {
